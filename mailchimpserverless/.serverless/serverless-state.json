@@ -1,0 +1,652 @@
+{
+  "service": {
+    "service": "serverless-test",
+    "serviceObject": {
+      "name": "serverless-test"
+    },
+    "provider": {
+      "stage": "dev",
+      "variableSyntax": "\\${([ ~:a-zA-Z0-9._@'\",\\-\\/\\(\\)*]+?)}",
+      "name": "aws",
+      "runtime": "python3.6",
+      "region": "us-west-2",
+      "timeout": 30,
+      "environment": {
+        "AWS_TASK_QUEUE": "mcvod-mailchimp-tasks.fifo",
+        "CONFIG_CLASS": "config.DevelopmentConfig",
+        "DB_HOST": "development-db.c7eiigrdzodv.us-west-2.rds.amazonaws.com",
+        "DB_NAME": "ebdb",
+        "DB_PASSWORD": "flesh-hungry-grounder-second",
+        "DB_USER": "mcvodmailchimp",
+        "MAILCHIMP_DC": "us19",
+        "MAILCHIMP_KEY": "e5b59466b5dd7d5bc108bedf259d70aa",
+        "MAILCHIMP_LIST_ID": "4726427082",
+        "MAILCHIMP_USERNAME": "annie.thiessen@miraclechannel.ca",
+        "MCVOD_API_USERNAME": "mcvod-api",
+        "SECRET_KEY": "2K70F-M6q-ngYTotnnMTPcfWadaA32Qk"
+      },
+      "versionFunctions": true,
+      "remoteFunctionData": null,
+      "compiledCloudFormationTemplate": {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "The AWS CloudFormation template for this Serverless application",
+        "Resources": {
+          "ServerlessDeploymentBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketEncryption": {
+                "ServerSideEncryptionConfiguration": [
+                  {
+                    "ServerSideEncryptionByDefault": {
+                      "SSEAlgorithm": "AES256"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "IndexLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/Index"
+            }
+          },
+          "RetrieveDashhashLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/RetrieveHash"
+            }
+          },
+          "IamRoleLambdaExecution": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+              "AssumeRolePolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": {
+                      "Service": [
+                        "lambda.amazonaws.com"
+                      ]
+                    },
+                    "Action": [
+                      "sts:AssumeRole"
+                    ]
+                  }
+                ]
+              },
+              "Policies": [
+                {
+                  "PolicyName": {
+                    "Fn::Join": [
+                      "-",
+                      [
+                        "dev",
+                        "serverless-test",
+                        "lambda"
+                      ]
+                    ]
+                  },
+                  "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "logs:CreateLogStream"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/Index:*"
+                          },
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/RetrieveHash:*"
+                          }
+                        ]
+                      },
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "logs:PutLogEvents"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/Index:*:*"
+                          },
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/RetrieveHash:*:*"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ],
+              "Path": "/",
+              "RoleName": {
+                "Fn::Join": [
+                  "-",
+                  [
+                    "serverless-test",
+                    "dev",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    "lambdaRole"
+                  ]
+                ]
+              }
+            }
+          },
+          "IndexLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/serverless-test/dev/1568059296037-2019-09-09T20:01:36.037Z/serverless-test.zip"
+              },
+              "FunctionName": "Index",
+              "Handler": "application.index",
+              "MemorySize": 1024,
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              },
+              "Runtime": "python3.6",
+              "Timeout": 30,
+              "Description": "Returns \"Hello MailChimp\". Auth not required.",
+              "Environment": {
+                "Variables": {
+                  "AWS_TASK_QUEUE": "mcvod-mailchimp-tasks.fifo",
+                  "CONFIG_CLASS": "config.DevelopmentConfig",
+                  "DB_HOST": "development-db.c7eiigrdzodv.us-west-2.rds.amazonaws.com",
+                  "DB_NAME": "ebdb",
+                  "DB_PASSWORD": "flesh-hungry-grounder-second",
+                  "DB_USER": "mcvodmailchimp",
+                  "MAILCHIMP_DC": "us19",
+                  "MAILCHIMP_KEY": "e5b59466b5dd7d5bc108bedf259d70aa",
+                  "MAILCHIMP_LIST_ID": "4726427082",
+                  "MAILCHIMP_USERNAME": "annie.thiessen@miraclechannel.ca",
+                  "MCVOD_API_USERNAME": "mcvod-api",
+                  "SECRET_KEY": "2K70F-M6q-ngYTotnnMTPcfWadaA32Qk"
+                }
+              }
+            },
+            "DependsOn": [
+              "IndexLogGroup",
+              "IamRoleLambdaExecution"
+            ]
+          },
+          "IndexLambdaVersioncchsTm46Tps0f5ur1qNxs8tBB4T3D16jAIe4Txtrrg": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "IndexLambdaFunction"
+              },
+              "CodeSha256": "VvsqS0LWUO2LfuBlEcnGXLyrpZvqAkDpNB+3Ce6zb3o=",
+              "Description": "Returns \"Hello MailChimp\". Auth not required."
+            }
+          },
+          "RetrieveDashhashLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/serverless-test/dev/1568059296037-2019-09-09T20:01:36.037Z/serverless-test.zip"
+              },
+              "FunctionName": "RetrieveHash",
+              "Handler": "application.retrieve_hash",
+              "MemorySize": 1024,
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              },
+              "Runtime": "python3.6",
+              "Timeout": 30,
+              "Description": "Returns md5 hash. Auth required.",
+              "Environment": {
+                "Variables": {
+                  "AWS_TASK_QUEUE": "mcvod-mailchimp-tasks.fifo",
+                  "CONFIG_CLASS": "config.DevelopmentConfig",
+                  "DB_HOST": "development-db.c7eiigrdzodv.us-west-2.rds.amazonaws.com",
+                  "DB_NAME": "ebdb",
+                  "DB_PASSWORD": "flesh-hungry-grounder-second",
+                  "DB_USER": "mcvodmailchimp",
+                  "MAILCHIMP_DC": "us19",
+                  "MAILCHIMP_KEY": "e5b59466b5dd7d5bc108bedf259d70aa",
+                  "MAILCHIMP_LIST_ID": "4726427082",
+                  "MAILCHIMP_USERNAME": "annie.thiessen@miraclechannel.ca",
+                  "MCVOD_API_USERNAME": "mcvod-api",
+                  "SECRET_KEY": "2K70F-M6q-ngYTotnnMTPcfWadaA32Qk"
+                }
+              }
+            },
+            "DependsOn": [
+              "RetrieveDashhashLogGroup",
+              "IamRoleLambdaExecution"
+            ]
+          },
+          "RetrieveDashhashLambdaVersionS7K8V16VbzBrk14WHNmBRmIe8jbdIEhqwBB3OiqU": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "RetrieveDashhashLambdaFunction"
+              },
+              "CodeSha256": "VvsqS0LWUO2LfuBlEcnGXLyrpZvqAkDpNB+3Ce6zb3o=",
+              "Description": "Returns md5 hash. Auth required."
+            }
+          },
+          "ApiGatewayRestApi": {
+            "Type": "AWS::ApiGateway::RestApi",
+            "Properties": {
+              "Name": "dev-serverless-test",
+              "EndpointConfiguration": {
+                "Types": [
+                  "EDGE"
+                ]
+              }
+            }
+          },
+          "ApiGatewayResourceHash": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+              "ParentId": {
+                "Fn::GetAtt": [
+                  "ApiGatewayRestApi",
+                  "RootResourceId"
+                ]
+              },
+              "PathPart": "hash",
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              }
+            }
+          },
+          "ApiGatewayResourceHashEmailVar": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+              "ParentId": {
+                "Ref": "ApiGatewayResourceHash"
+              },
+              "PathPart": "{email}",
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              }
+            }
+          },
+          "ApiGatewayMethodGet": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+              "HttpMethod": "GET",
+              "RequestParameters": {},
+              "ResourceId": {
+                "Fn::GetAtt": [
+                  "ApiGatewayRestApi",
+                  "RootResourceId"
+                ]
+              },
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "ApiKeyRequired": false,
+              "AuthorizationType": "NONE",
+              "Integration": {
+                "IntegrationHttpMethod": "POST",
+                "Type": "AWS_PROXY",
+                "Uri": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":apigateway:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":lambda:path/2015-03-31/functions/",
+                      {
+                        "Fn::GetAtt": [
+                          "IndexLambdaFunction",
+                          "Arn"
+                        ]
+                      },
+                      "/invocations"
+                    ]
+                  ]
+                }
+              },
+              "MethodResponses": []
+            }
+          },
+          "ApiGatewayMethodHashEmailVarGet": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+              "HttpMethod": "GET",
+              "RequestParameters": {},
+              "ResourceId": {
+                "Ref": "ApiGatewayResourceHashEmailVar"
+              },
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "ApiKeyRequired": false,
+              "AuthorizationType": "NONE",
+              "Integration": {
+                "IntegrationHttpMethod": "POST",
+                "Type": "AWS_PROXY",
+                "Uri": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":apigateway:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":lambda:path/2015-03-31/functions/",
+                      {
+                        "Fn::GetAtt": [
+                          "RetrieveDashhashLambdaFunction",
+                          "Arn"
+                        ]
+                      },
+                      "/invocations"
+                    ]
+                  ]
+                }
+              },
+              "MethodResponses": []
+            }
+          },
+          "ApiGatewayDeployment1568059280257": {
+            "Type": "AWS::ApiGateway::Deployment",
+            "Properties": {
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "StageName": "dev"
+            },
+            "DependsOn": [
+              "ApiGatewayMethodGet",
+              "ApiGatewayMethodHashEmailVarGet"
+            ]
+          },
+          "IndexLambdaPermissionApiGateway": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "IndexLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "ApiGatewayRestApi"
+                    },
+                    "/*/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "RetrieveDashhashLambdaPermissionApiGateway": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "RetrieveDashhashLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "ApiGatewayRestApi"
+                    },
+                    "/*/*"
+                  ]
+                ]
+              }
+            }
+          }
+        },
+        "Outputs": {
+          "ServerlessDeploymentBucketName": {
+            "Value": {
+              "Ref": "ServerlessDeploymentBucket"
+            }
+          },
+          "IndexLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "IndexLambdaVersioncchsTm46Tps0f5ur1qNxs8tBB4T3D16jAIe4Txtrrg"
+            }
+          },
+          "RetrieveDashhashLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "RetrieveDashhashLambdaVersionS7K8V16VbzBrk14WHNmBRmIe8jbdIEhqwBB3OiqU"
+            }
+          },
+          "ServiceEndpoint": {
+            "Description": "URL of the service endpoint",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  "https://",
+                  {
+                    "Ref": "ApiGatewayRestApi"
+                  },
+                  ".execute-api.",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ".",
+                  {
+                    "Ref": "AWS::URLSuffix"
+                  },
+                  "/dev"
+                ]
+              ]
+            }
+          }
+        }
+      },
+      "coreCloudFormationTemplate": {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "The AWS CloudFormation template for this Serverless application",
+        "Resources": {
+          "ServerlessDeploymentBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketEncryption": {
+                "ServerSideEncryptionConfiguration": [
+                  {
+                    "ServerSideEncryptionByDefault": {
+                      "SSEAlgorithm": "AES256"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "Outputs": {
+          "ServerlessDeploymentBucketName": {
+            "Value": {
+              "Ref": "ServerlessDeploymentBucket"
+            }
+          }
+        }
+      },
+      "vpc": {}
+    },
+    "custom": {
+      "wsgi": {
+        "app": "application.application",
+        "packRequirements": false
+      },
+      "pythonRequirements": {
+        "dockerizePip": "non-linux"
+      },
+      "stages": [
+        "dev",
+        "prod"
+      ],
+      "aws_task_queue": {
+        "dev": "mcvod-mailchimp-tasks.fifo",
+        "prod": "mcvod-mailchimp-tasks.fifo"
+      },
+      "config_class": {
+        "dev": "config.DevelopmentConfig",
+        "prod": "config.ProductionConfig"
+      },
+      "db_host": {
+        "dev": "development-db.c7eiigrdzodv.us-west-2.rds.amazonaws.com",
+        "prod": "production-db.c7eiigrdzodv.us-west-2.rds.amazonaws.com"
+      },
+      "db_name": {
+        "dev": "ebdb",
+        "prod": "ebdb"
+      },
+      "db_password": {
+        "dev": "flesh-hungry-grounder-second",
+        "prod": "hot-headed-grounder-warhead"
+      },
+      "db_user": {
+        "dev": "mcvodmailchimp",
+        "prod": "mcvodmailchimp"
+      },
+      "mailchimp_dc": {
+        "dev": "us19",
+        "prod": "us3"
+      },
+      "mailchimp_key": {
+        "dev": "e5b59466b5dd7d5bc108bedf259d70aa",
+        "prod": "98ddf45561e5afa16f189c118f38e413"
+      },
+      "mailchimp_list_id": {
+        "dev": "4726427082",
+        "prod": "5b369dd41e"
+      },
+      "mailchimp_username": {
+        "dev": "annie.thiessen@miraclechannel.ca",
+        "prod": "annie.thiessen@miraclechannel.ca"
+      },
+      "mcvod_api_username": {
+        "dev": "mcvod-api",
+        "prod": "mcvod-api"
+      },
+      "secret_key": {
+        "dev": "2K70F-M6q-ngYTotnnMTPcfWadaA32Qk",
+        "prod": "L8-gv2M5n-ngYionk0MTPc09adaL32Qj"
+      }
+    },
+    "plugins": [
+      "serverless-python-requirements",
+      "serverless-wsgi",
+      "serverless-stage-manager"
+    ],
+    "pluginsData": {},
+    "functions": {
+      "index": {
+        "handler": "application.index",
+        "name": "Index",
+        "description": "Returns \"Hello MailChimp\". Auth not required.",
+        "events": [
+          {
+            "http": {
+              "path": "",
+              "method": "get",
+              "integration": "AWS_PROXY"
+            }
+          }
+        ],
+        "package": {},
+        "memory": 1024,
+        "timeout": 30,
+        "runtime": "python3.6",
+        "vpc": {}
+      },
+      "retrieve-hash": {
+        "handler": "application.retrieve_hash",
+        "name": "RetrieveHash",
+        "description": "Returns md5 hash. Auth required.",
+        "events": [
+          {
+            "http": {
+              "path": "hash/{email}",
+              "method": "get",
+              "integration": "AWS_PROXY"
+            }
+          }
+        ],
+        "package": {},
+        "memory": 1024,
+        "timeout": 30,
+        "runtime": "python3.6",
+        "vpc": {}
+      }
+    },
+    "serviceFilename": "serverless.yml",
+    "layers": {},
+    "artifact": "/Users/annie/Code/mcvod-mailchimp/mcvodmailchimp/.serverless/serverless-test.zip"
+  },
+  "package": {
+    "artifactDirectoryName": "serverless/serverless-test/dev/1568059296037-2019-09-09T20:01:36.037Z",
+    "artifact": "serverless-test.zip"
+  }
+}

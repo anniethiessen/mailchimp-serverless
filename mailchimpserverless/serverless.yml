@@ -1,0 +1,93 @@
+org: anniethiessen
+app: mailchimp-serverless
+service: mailchimp-serverless
+
+plugins:
+  - serverless-python-requirements
+  - serverless-wsgi
+  - serverless-stage-manager
+
+provider:
+  name: aws
+  runtime: python3.6
+  stage: ${opt:stage, 'dev'}
+  region: us-west-2
+  timeout: 30
+  environment:
+    AWS_TASK_QUEUE: ${self:custom.aws_task_queue.${self:provider.stage}}
+    CONFIG_CLASS: ${self:custom.config_class.${self:provider.stage}}
+    DB_HOST: ${self:custom.db_host.${self:provider.stage}}
+    DB_NAME: ${self:custom.db_name.${self:provider.stage}}
+    DB_PASSWORD: ${self:custom.db_password.${self:provider.stage}}
+    DB_USER: ${self:custom.db_user.${self:provider.stage}}
+    MAILCHIMP_DC: ${self:custom.mailchimp_dc.${self:provider.stage}}
+    MAILCHIMP_KEY: ${self:custom.mailchimp_key.${self:provider.stage}}
+    MAILCHIMP_LIST_ID: ${self:custom.mailchimp_list_id.${self:provider.stage}}
+    MAILCHIMP_USERNAME: ${self:custom.mailchimp_username.${self:provider.stage}}
+    MCVOD_API_USERNAME: ${self:custom.mcvod_api_username.${self:provider.stage}}
+    SECRET_KEY: ${self:custom.secret_key.${self:provider.stage}}
+
+custom:
+  wsgi:
+    app: application.application
+    packRequirements: false
+  pythonRequirements:
+    dockerizePip: non-linux
+  stages:
+    - dev
+    - prod
+  aws_task_queue:
+    dev: <>
+    prod: <>
+  config_class:
+    dev: config.DevelopmentConfig
+    prod: config.ProductionConfig
+  db_host:
+    dev: <>
+    prod: <>
+  db_name:
+    dev: <>
+    prod: <>
+  db_password:
+    dev: <>
+    prod: <>
+  db_user:
+    dev: <>
+    prod: <>
+  mailchimp_dc:
+    dev: <>
+    prod: <>
+  mailchimp_key:
+    dev: <>
+    prod: <>
+  mailchimp_list_id:
+    dev: '<>
+    prod: <>
+  mailchimp_username:
+    dev: <>
+    prod: <>
+  mcvod_api_username:
+    dev: <>
+    prod: <>
+  secret_key:
+    dev: <>
+    prod: <>
+
+functions:
+  index:
+    handler: application.index
+    name: Index
+    description: Returns "Hello MailChimp". Auth not required.
+    events:
+      - http:
+          path: /
+          method: get
+  retrieve-hash:
+    handler: application.retrieve_hash
+    name: RetrieveHash
+    description: Returns md5 hash. Auth required.
+    events:
+      - http:
+          path: /hash/{email}
+          method: get
+
